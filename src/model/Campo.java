@@ -22,6 +22,10 @@ public class Campo {
 	@Column(name = "id", unique = true, nullable = true)
 	private int id_campo;
 
+	
+	@Column(name = "nombre") // Nuevo campo
+	private String nombre;
+	 
 	@OneToMany
     @JoinColumn(name = "campo_id")
 	private List<Vid> vids;
@@ -32,8 +36,9 @@ public class Campo {
 	
 	public Campo() {}
 
-	public Campo(Bodega b) {
+	public Campo(Bodega b, String nombre) {
 		this.bodega = b;
+		this.nombre = nombre;
 		this.vids = new ArrayList<>();
 	}
 

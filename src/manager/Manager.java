@@ -44,6 +44,8 @@ public class Manager {
 		getEntrada();
 		manageActions();
 		showAllCampos();
+		showCantidadVidByTipo();
+		showAllVids();
 		session.close();
 	}
 
@@ -77,13 +79,20 @@ public class Manager {
 	}
 
 	private void vendimia() {
-		this.b.getVids().addAll(this.c.getVids());
-		
-		tx = session.beginTransaction();
-		session.save(b);
-		
-		tx.commit();
+	    tx = session.beginTransaction();
+	    List<Bodega> bodegas = session.createQuery("from Bodega").list();
+	    for (Bodega bodega : bodegas) {
+	        List<Campo> campos = bodega.getCampos();
+	        for (Campo campo : campos) {
+	            bodega.getVids().addAll(campo.getVids());
+	        }
+	        session.save(bodega);
+	    }
+	    tx.commit();
 	}
+
+
+
 
 	private void addVid(String[] split) {
 		Vid v = new Vid(TipoVid.valueOf(split[1].toUpperCase()), Integer.parseInt(split[2]));
@@ -98,7 +107,7 @@ public class Manager {
 	}
 
 	private void addCampo(String[] split) {
-		c = new Campo(b);
+		c = new Campo(b, null);
 		tx = session.beginTransaction();
 		
 		int id = (Integer) session.save(c);
@@ -134,6 +143,40 @@ public class Manager {
 		}
 		tx.commit();
 	}
+	
+	private void showCantidadVidByTipo() {
+	    tx = session.beginTransaction();
+	    Query q = session.createQuery("select vid.vid, sum(vid.cantidad) from Vid vid group by vid.vid");
+	    List<Object[]> results = q.list();
+	    for (Object[] result : results) {
+	        TipoVid tipoVid = (TipoVid) result[0];
+	        int cantidad = ((Number) result[1]).intValue();
+	        System.out.println("TipoVid: " + tipoVid + ", Cantidad: " + cantidad);
+	    }
+	    tx.commit();
+	}
+
+	
+	private void showAllVids() {
+	    tx = session.beginTransaction();
+	    Query q = session.createQuery("from Vid vid order by (case when vid.vid = :negra then 1 else 2 end), vid.vid");
+	    q.setParameter("negra", TipoVid.NEGRA);
+	    List<Vid> list = q.list();
+	    for (Vid vid : list) {
+	        System.out.println(vid);
+	    }
+	    
+	    q = session.createQuery("from Vid vid order by (case when vid.vid = :blanca then 2 else 1 end), vid.vid");
+	    q.setParameter("blanca", TipoVid.BLANCA);
+	    list = q.list();
+	    for (Vid vid : list) {
+	        System.out.println(vid);
+	    }
+	    tx.commit();
+	}
+
+
+
 
 	
 }
